@@ -733,17 +733,32 @@ function FaqSection() {
   );
 }
 
+const SEND_LEAD_URL = "https://functions.poehali.dev/325334d9-4cb7-453d-ab53-516f6e5e516d";
+
 // ── Контакты + Форма ──────────────────────
 function ContactsSection() {
   const [form, setForm] = useState({ name: "", phone: "", company: "", message: "" });
-  const [status, setStatus] = useState<"idle" | "loading" | "success">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.phone.trim()) return;
     setStatus("loading");
-    // TODO: подключить реальную отправку формы
-    setTimeout(() => setStatus("success"), 1500);
+    try {
+      const res = await fetch(SEND_LEAD_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (res.ok) {
+        setStatus("success");
+        setForm({ name: "", phone: "", company: "", message: "" });
+      } else {
+        setStatus("error");
+      }
+    } catch {
+      setStatus("error");
+    }
   };
 
   return (
@@ -884,6 +899,12 @@ function ContactsSection() {
                       </>
                     )}
                   </button>
+                  {status === "error" && (
+                    <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/25 rounded-xl px-4 py-3">
+                      <Icon name="AlertCircle" size={15} className="text-red-400 flex-shrink-0" />
+                      <span className="text-red-400 text-sm">Ошибка отправки. Позвоните нам: 8 499 350-27-07</span>
+                    </div>
+                  )}
                   <p className="text-white/25 text-xs text-center">
                     Нажимая кнопку, вы соглашаетесь с{" "}
                     <a href="#" className="text-[#c9a349]/60 hover:text-[#c9a349] underline">
